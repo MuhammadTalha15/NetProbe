@@ -28,7 +28,7 @@ class PortScanner {
         void setTarget(const string& ip);
         void setRange(int start, int end);
 
-        bool startSignlePortScan(int sPort);
+        bool startSinglePortScan(int sPort);
 
         vector <PortResult> scanAllPorts();
 };
