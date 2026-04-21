@@ -17,6 +17,10 @@
 #include <netdb.h>
 #include <unistd.h>
 
+// SOURCE FILES
+
+#include "./utilities/help.cpp"
+
 using namespace std;
 
 // Function to display the futuristic splash screen
@@ -70,50 +74,19 @@ void displayLogo() {
     cout << "    Status:  " << CYAN << "ONLINE" << RESET << "          Version: 1.0.4\n\n";
 }
 
-void displayHelp(){
-    
-    cout<<"\nSCAN TECHNIQUES: " <<endl;
-    cout<<" -p ( Simple Port Scan )" <<endl;
-    cout<<" -sV ( Target Service Version Detection )" <<endl;
-    cout<<" -O ( Operating System Detection )" <<endl;
-    cout<<" -p ( Simple Port Scan )" <<endl;
-    cout<<" -pS ( IP Protocol Scan )" <<endl;
-
-    cout<<"\nHOST DISCOVERY: " <<endl;
-    cout<<" -sn ( Simple Ping Scan )" <<endl;
-    cout<<" -sL ( Scanning from Given Lists )" <<endl;
-    cout<<" -O ( Operating System Detection )" <<endl;
-    cout<<" -p ( Simple Port Scan )" <<endl;
-
-    cout<<"\nEXAMPLES: " <<endl;
-    cout<<" netp <target ip address>" <<endl;
-    cout<<" netp -flag <target ip address>" <<endl;
-    cout<<" Type [ -h or --help ] anytime for Help" <<endl;
-
-}
-
-void displayBanner(){
-    cout << "================================================" <<endl;
-    cout << "           SCANING TECHNIQUES AND ORDER         " <<endl;
-    cout << "================================================" <<endl;
-
-    displayHelp();
-
-}
-
 int main() {
     system("clear");
 
     string choice;
 
     displayLogo();
-    displayBanner();
 
     cout<<">";
     cin>>choice;
 
     if (choice == "-h" || choice == "--help"){
-        displayHelp();
+        displayBanner();
+        // displayHelp();
     }
     
     
