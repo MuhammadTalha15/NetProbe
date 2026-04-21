@@ -92,7 +92,7 @@ int main() {
 
     system("clear");
 
-    PortScanner scanner("192.168.1.5", 20, 500, 10);
+    PortScanner scanner("127.0.0.1", 20, 500, 10);
     int choice;
 
     displayLogo();
