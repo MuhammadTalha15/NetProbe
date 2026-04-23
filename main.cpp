@@ -146,6 +146,7 @@ int main()
         PortScanner scanner(finalTarget, 20, 500, 170);
         vector<PortResult> results = scanner.scanAllPorts();
 
+        
         // Step 5: Output
         cout << "Scan Results:\n";
 
