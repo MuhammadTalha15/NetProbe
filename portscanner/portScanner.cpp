@@ -59,8 +59,8 @@ bool PortScanner::startSinglePortScan(int sPort){
     
 }
 
-std::vector<PortResult> PortScanner::scanAllPorts() {
-    std::vector<PortResult> results;
+vector<PortResult> PortScanner::scanAllPorts() {
+    vector<PortResult> results;
 
     for (int port = startPort; port <= endPort; port++) {
         bool status = startSinglePortScan(port);

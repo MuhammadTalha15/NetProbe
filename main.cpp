@@ -24,14 +24,15 @@
 
 using namespace std;
 
-const string CYAN = "\033[33m";
+const string YELLOW = "\033[33m";
+const string GREEN = "\033[32m";
+const string CYAN = "\033[36m";
 const string MAGENTA = "\033[35m";
 const string BOLD = "\033[1m";
 const string RESET = "\033[0m";
 
 // Function to display the futuristic splash screen
-void displayLogo()
-{
+void displayLogo(){
 
     // ANSI Escape Codes for Colors
 
@@ -91,8 +92,7 @@ void displayLogo()
     cout << endl;
 }
 
-int main()
-{
+int main(){
 
     system("clear");
 
@@ -104,22 +104,24 @@ int main()
     cout << CYAN << "probe" << RESET << ">";
     cin >> choice;
 
-    if (choice == 1)
-    {
+    if (choice == 1){
+
         cout << "Enter Target IP / Domain: ";
         cin >> targetIP;
 
         HostResolver resolver;
 
         // Step 1: Extract clean hostname (works for URL/domain/IP)
+
         string host = resolver.extractHostname(targetIP);
 
         // Step 2: Detect if it's a domain (contains letters)
+
         bool isDomain = false;
-        for (char c : host)
-        {
-            if (isalpha(c))
-            {
+        for (char c : host){
+
+            if (isalpha(c)){
+
                 isDomain = true;
                 break;
             }
@@ -128,12 +130,13 @@ int main()
         string finalTarget = host;
 
         // Step 3: Resolve if domain
-        if (isDomain)
-        {
+
+        if (isDomain){
+
             string ipAddress = resolver.resolveToIP(host);
 
-            if (ipAddress.empty())
-            {
+            if (ipAddress.empty()){
+
                 cout << "Could not resolve host\n";
                 return 0;
             }
@@ -143,19 +146,20 @@ int main()
         }
 
         // Step 4: Scan
-        PortScanner scanner(finalTarget, 20, 500, 170);
+        cout<< YELLOW << "Starting NetProbe Scanning ..." << RESET << endl;
+        PortScanner scanner(finalTarget, 20, 500, 230);
         vector<PortResult> results = scanner.scanAllPorts();
 
         
         // Step 5: Output
-        cout << "Scan Results:\n";
+        cout << "\nNetProbe Scan Results for ("<< targetIP << ") Resolved to -> " << finalTarget << "\n\n";
 
         bool found = false;
-        for (const auto &r : results)
-        {
-            if (r.open)
-            {
-                cout << "Port " << r.port << " is OPEN\n";
+        for (const auto &r : results){
+
+            if (r.open){
+                
+                cout << "Port " << r.port << " is OPEN ["<< GREEN << "OK" << RESET <<"]\n";
                 found = true;
             }
         }
@@ -164,8 +168,13 @@ int main()
             cout << "No open ports found.\n";
     }
 
-    else if (choice == 99)
-    {
+
+    if ( choice == 2){
+        // Service Detection Code Goes Here 
+
+    }
+
+    else if (choice == 99){
 
         cout << endl;
         cout << "Thanks for Using Netprobe as your Network Agent";
