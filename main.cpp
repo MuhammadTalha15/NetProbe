@@ -94,93 +94,101 @@ void displayLogo(){
 
 int main(){
 
-    system("clear");
-
     int choice;
     string targetIP;
 
-    displayLogo();
+    while (true){
 
-    cout << CYAN << "probe" << RESET << ">";
-    cin >> choice;
+        system("clear");
+        displayLogo();
 
-    if (choice == 1){
+        cout << CYAN << "probe" << RESET << ">";
+        cin >> choice;
 
-        cout << "Enter Target IP / Domain: ";
-        cin >> targetIP;
+        if (choice == 1){
 
-        HostResolver resolver;
+            cout << "Enter Target IP / Domain: ";
+            cin >> targetIP;
 
-        // Step 1: Extract clean hostname (works for URL/domain/IP)
+            HostResolver resolver;
 
-        string host = resolver.extractHostname(targetIP);
+            string host = resolver.extractHostname(targetIP);
 
-        // Step 2: Detect if it's a domain (contains letters)
-
-        bool isDomain = false;
-        for (char c : host){
-
-            if (isalpha(c)){
-
-                isDomain = true;
-                break;
-            }
-        }
-
-        string finalTarget = host;
-
-        // Step 3: Resolve if domain
-
-        if (isDomain){
-
-            string ipAddress = resolver.resolveToIP(host);
-
-            if (ipAddress.empty()){
-
-                cout << "Could not resolve host\n";
-                return 0;
+            bool isDomain = false;
+            for (char c : host){
+                if (isalpha(c)){
+                    isDomain = true;
+                    break;
+                }
             }
 
-            cout << "Resolved: " << host << " -> " << ipAddress << endl;
-            finalTarget = ipAddress;
-        }
+            string finalTarget = host;
 
-        // Step 4: Scan
-        cout<< YELLOW << "Starting NetProbe Scanning ..." << RESET << endl;
-        PortScanner scanner(finalTarget, 20, 500, 230);
-        vector<PortResult> results = scanner.scanAllPorts();
+            if (isDomain){
+                string ipAddress = resolver.resolveToIP(host);
 
-        
-        // Step 5: Output
-        cout << "\nNetProbe Scan Results for ("<< targetIP << ") Resolved to -> " << finalTarget << "\n\n";
+                if (ipAddress.empty()){
+                    cout << "Could not resolve host\n";
+                    continue; // go back to menu
+                }
 
-        bool found = false;
-        for (const auto &r : results){
-
-            if (r.open){
-                
-                cout << "Port " << r.port << " is OPEN ["<< GREEN << "OK" << RESET <<"]\n";
-                found = true;
+                cout << "Resolved: " << host << " -> " << ipAddress << endl;
+                finalTarget = ipAddress;
             }
+
+            cout << YELLOW << "Starting NetProbe Scanning ..." << RESET << endl;
+
+            PortScanner scanner(finalTarget, 20, 500, 250);
+            vector<PortResult> results = scanner.scanAllPorts();
+
+            cout << "\nNetProbe Scan Results for (" << targetIP
+                 << ") Resolved to -> " << finalTarget << "\n\n";
+
+            bool found = false;
+            for (const auto &r : results){
+                if (r.open){
+                    cout << "Port " << r.port << " is OPEN ["
+                         << GREEN << "OK" << RESET << "]\n";
+                    found = true;
+                }
+            }
+
+            if (!found)
+                cout << "No open ports found.\n";
+
+            // ⏸ Pause before returning to menu
+            cout << "\nPress Enter to return to menu...";
+            cin.ignore();
+            cin.get();
         }
 
-        if (!found)
-            cout << "No open ports found.\n";
-    }
+        else if (choice == 3){
+            // Service Detection
+
+            // string ip;
+
+            // cout<<"Enter Target IP: ";
+            // cin>>ip;
+
+            // OSDetector osd;
+
+            // string os = osd.detectOS(ip);
+            // cout << "\nDetected OS: " << os << std::endl;
 
 
-    if ( choice == 2){
-        // Service Detection Code Goes Here 
 
-    }
+        }
 
-    else if (choice == 99){
+        else if (choice == 99){
 
-        cout << endl;
-        cout << "Thanks for Using Netprobe as your Network Agent";
-        cout << endl;
-        cout << "Happy Hacking...and remember...hugs are more worht than handshakes";
-        cout << endl;
+            cout << "\nThanks for Using Netprobe as your Network Agent\n";
+            cout << "Happy Hacking...and remember...hugs are more worth than handshakes\n";
+            break; // exit loop
+        }
+
+        else {
+            cout << "Invalid option!\n";
+        }
     }
 
     return 0;
