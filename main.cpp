@@ -21,6 +21,7 @@
 
 #include "./headers/portScanner.h"
 #include "./headers/hostresolver.h"
+#include "./headers/banner.h"
 
 using namespace std;
 
@@ -82,11 +83,9 @@ void displayLogo(){
     cout << endl;
     cout << "[1] Target Port Scanning" << endl;
     cout << "[2] Target Service Scanning" << endl;
-    cout << "[3] Host Discovery" << endl;
-    cout << "[4] Banner Grabbing and Operating System Detection" << endl;
-    cout << "[5] Vulnerability Analysis" << endl;
-    cout << "[6] Scan Report and Logs" << endl;
-    cout << "[7] Help, Credits and About" << endl;
+    cout << "[3] Banner Grabbing and Operating System Detection" << endl;
+    cout << "[5] Scan Report and Logs" << endl;
+    cout << "[6] Help, Credits and About" << endl;
     cout << endl;
     cout << "[99] Exit the Application" << endl;
     cout << endl;
@@ -163,20 +162,85 @@ int main(){
         }
 
         else if (choice == 3){
-            // Service Detection
+            
+            cout << "Enter Target IP / Domain: ";
 
-            // string ip;
+            cin >> targetIP;
 
-            // cout<<"Enter Target IP: ";
-            // cin>>ip;
+        HostResolver resolver;
 
-            // OSDetector osd;
+        string host = resolver.extractHostname(targetIP);
 
-            // string os = osd.detectOS(ip);
-            // cout << "\nDetected OS: " << os << std::endl;
+        bool isDomain = false;
 
+        for (char c : host){
 
+            if (isalpha(c)){
 
+                isDomain = true;
+
+                break;
+            }
+        }
+
+        string finalTarget = host;
+
+        if (isDomain){
+
+            string ipAddress =
+                resolver.resolveToIP(host);
+
+            if (ipAddress.empty()){
+
+                cout << "Could not resolve host\n";
+
+                continue;
+            }
+
+        cout << "Resolved: "
+             << host
+             << " -> "
+             << ipAddress
+             << endl;
+
+        finalTarget = ipAddress;
+    }
+
+        BannerGrabber bg;
+
+        vector<int> commonPorts = { 21,22,25,80,110,143,443,8080 };
+
+        bool found = false;
+
+        for(int port : commonPorts){
+
+        if(bg.isPortOpen(finalTarget, port)){
+
+            found = true;
+
+            cout << "\n[+] Port "
+                 << port
+                 << " OPEN\n";
+
+            string banner = bg.grabBanner(finalTarget, port);
+
+            cout << "\nBanner:\n";
+            cout << banner << endl;
+
+            cout << "\nDetected OS: ";
+
+            cout << bg.detectOS(banner) << endl;
+        }
+    }
+
+        if(!found){
+
+            cout << "\nNo responsive services found\n";
+        }
+
+            cout << "\nPress Enter to continue...";
+            cin.ignore();
+            cin.get();
         }
 
         else if (choice == 99){
