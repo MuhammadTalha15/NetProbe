@@ -3,3 +3,4 @@ Timestamp,Target,ScanType,Duration(sec),Result
 09/05/2026 10:45,google.com [142.250.202.46],Port Scan,120.333374,Open: 80 443 
 09/05/2026 10:48,github.com [20.207.73.82],Port Scan,120.619978,Open: 22 80 443 
 09/05/2026 11:03,Scanme.nmap.org [45.33.32.156],Banner/OS Scan,49.021170,--- Port 22 --- Banner: SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13   OS: Linux Ubuntu  --- Port 80 --- Banner: HTTP/1.1 200 OK  Date: Sat; 09 May 2026 15:03:36 GMT  Server: Apache/2.4.7 (Ubuntu)  Accept-Ranges: bytes  Vary: Accept-Encoding  Transfer-Encoding: chunked  Content-Type: text/html    4c  <!DOCTYPE html> <html lang=\"en\"> <head> <title>Go ahead and ScanM OS: Linux Ubuntu  
+09/05/2026 13:32,github.com [20.207.73.82],Service Detection,210.943710,--- Port 22 --- Service: SSH Protocol: SSH Version: OpenSSH  --- Port 80 --- Service: HTTP Protocol: HTTP Version: HTTP Service  --- Port 443 --- Service: HTTPS Protocol: HTTPS Version: HTTPS Service  

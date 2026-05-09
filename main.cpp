@@ -21,9 +21,12 @@
 // SOURCE FILES
 
 #include "./headers/portScanner.h"
+#include "./headers/service_detection.h"
 #include "./headers/hostresolver.h"
 #include "./headers/banner.h"
 #include "./headers/log_manager.h"
+
+#include "./headers/help.h"
 
 using namespace std;
 
@@ -80,10 +83,10 @@ void displayLogo(){
 
     cout << BOLD << CYAN << R"(
     _   __     __  ____             __       
-   / | / /__  / /_/ __ \_________  / /__ ___     
-  /  |/ / _ \/ __/ /_/ / ___/ __ \/ __  / _ \    
- / /|  /  __/ /_/ ____/ /  / /_/ / /_/ /  __/    
-/_/ |_/\___/\__/_/   /_/   \____/\__,_/\___/    
+   / | / /__  / /_/ __ \_________  / /__ ___
+  /  |/ / _ \/ __/ /_/ / ___/ __ \/ __  / _ \
+ / /|  /  __/ /_/ ____/ /  / /_/ / /_/ /  __/
+/_/ |_/\___/\__/_/   /_/   \____/\__,_/\___/
 
     )" << endl
          << RESET;
@@ -99,7 +102,7 @@ void displayLogo(){
     cout << "[1] Target Port Scanning" << endl;
     cout << "[2] Target Service Scanning" << endl;
     cout << "[3] Banner Grabbing and Operating System Detection" << endl;
-    cout << "[5] Scan Report and Logs" << endl;
+    cout << "[4] Scan Report and Logs" << endl;
     cout << "[6] Help, Credits and About" << endl;
     cout << endl;
     cout << "[99] Exit the Application" << endl;
@@ -271,17 +274,20 @@ int main(){
             cin.get();        
         }
 
-        else if (choice == 3){
+        else if (choice == 2) {
+
             cout << "Enter Target IP / Domain: ";
 
             cin >> targetIP;
-                    
+
             HostResolver resolver;
-                    
-            string hostInput = resolver.extractHostname(targetIP);
-                    
-            string finalTarget = resolver.resolveToIP(hostInput);
-                    
+
+            string hostInput =
+                resolver.extractHostname(targetIP);
+
+            string finalTarget =
+                resolver.resolveToIP(hostInput);
+
             if(finalTarget.empty()) {
             
                 cout << RED
@@ -293,7 +299,176 @@ int main(){
             
                 continue;
             }
+        
+            if(hostInput != finalTarget) {
             
+                cout << "Resolved: "
+                     << hostInput
+                     << " -> "
+                     << finalTarget
+                     << endl;
+            }
+        
+            cout << YELLOW
+                 << "Starting Service Detection..."
+                 << RESET
+                 << endl;
+        
+            auto start =
+                chrono::high_resolution_clock::now();
+        
+            ServiceDetection detector(finalTarget);
+        
+            vector<int> commonPorts = {
+            
+                21,
+                22,
+                25,
+                53,
+                80,
+                110,
+                143,
+                443,
+                445,
+                3306,
+                5432,
+                6379,
+                8080
+            };
+        
+            vector<ServiceInfo> results =
+                detector.detectMultipleServices(
+                    commonPorts
+                );
+            
+            stringstream logData;
+            
+            bool found = false;
+            
+            for(const auto& result : results){
+            
+                found = true;
+            
+                cout << "\n========================\n";
+            
+                cout << GREEN
+                     << "[+] PORT "
+                     << result.port
+                     << RESET
+                     << endl;
+            
+                cout << "Service : "
+                     << result.serviceName
+                     << endl;
+            
+                cout << "Protocol: "
+                     << result.protocol
+                     << endl;
+            
+                cout << "Version : "
+                     << result.version
+                     << endl;
+            
+                if(!result.metadata.empty()){
+                
+                    cout << "\nMetadata:\n";
+                
+                    for(
+                        const auto& item
+                        : result.metadata
+                    ){
+                    
+                        cout << item.first
+                             << " : "
+                             << item.second
+                             << endl;
+                    }
+                }
+            
+                logData
+                    << "--- Port "
+                    << result.port
+                    << " ---\n";
+            
+                logData
+                    << "Service: "
+                    << result.serviceName
+                    << "\n";
+            
+                logData
+                    << "Protocol: "
+                    << result.protocol
+                    << "\n";
+            
+                logData
+                    << "Version: "
+                    << result.version
+                    << "\n\n";
+            }
+        
+            if(!found){
+            
+                cout << RED
+                     << "\nNo detectable services found\n"
+                     << RESET
+                     << endl;
+            }
+        
+            auto end =
+                chrono::high_resolution_clock::now();
+        
+            chrono::duration<double>
+                duration = end - start;
+        
+            logger.logGeneralScan(
+            
+                "Service Detection",
+            
+                hostInput,
+            
+                finalTarget,
+            
+                logData.str(),
+            
+                duration.count()
+            );
+        
+            cout << CYAN
+                 << "\n[!] Service detection results logged"
+                 << RESET
+                 << endl;
+        
+            cout << "\nPress Enter to continue...";
+        
+            cin.ignore(1000, '\n');
+        
+            cin.get();
+        
+        }
+
+        else if (choice == 3){
+            cout << "Enter Target IP / Domain: ";
+
+            cin >> targetIP;
+
+            HostResolver resolver;
+
+            string hostInput = resolver.extractHostname(targetIP);
+
+            string finalTarget = resolver.resolveToIP(hostInput);
+
+            if(finalTarget.empty()) {
+            
+                cout << RED
+                     << "Could not resolve host"
+                     << RESET
+                     << endl;
+            
+                sleep(1);
+            
+                continue;
+            }
+
             // Show resolution only if domain was entered
             if(hostInput != finalTarget) {
             
@@ -303,32 +478,32 @@ int main(){
                      << finalTarget
                      << endl;
             }
-            
+
             // ======================================================
             // Timing Start
             // ======================================================
-            
+
             auto start = chrono::high_resolution_clock::now();
-            
+
             // ======================================================
             // Log Data Collector
             // ======================================================
-            
+
             stringstream realLogData;
-            
+
             BannerGrabber bg;
-            
+
             vector<int> commonPorts = {
                 21,22,25,80,110,143,443,8080
             };
-            
+
             bool found = false;
-            
+
             cout << YELLOW
                  << "Initiating Banner/OS Detection..."
                  << RESET
                  << endl;
-            
+
             for(int port : commonPorts) {
             
                 if(stopFlag) {
@@ -377,20 +552,20 @@ int main(){
                         << "\n\n";
                 }
             }
-            
+
             // ======================================================
             // Timing End
             // ======================================================
-            
+
             auto end = chrono::high_resolution_clock::now();
-            
+
             chrono::duration<double> duration =
                 end - start;
-            
+
             // ======================================================
             // Interrupted Scan
             // ======================================================
-            
+
             if(stopFlag) {
             
                 cout << RED
@@ -400,20 +575,20 @@ int main(){
             
                 realLogData << "[SCAN INTERRUPTED]";
             }
-            
+
             // ======================================================
             // Final Output
             // ======================================================
-            
+
             if(!found && !stopFlag) {
             
                 cout << "\nNo responsive services found\n";
             }
-            
+
             // ======================================================
             // Save Logs
             // ======================================================
-            
+
             if(found || stopFlag) {
             
                 logger.logGeneralScan(
@@ -429,18 +604,18 @@ int main(){
                      << RESET
                      << endl;
             }
-            
+
             // ======================================================
             // Pause
             // ======================================================
-            
+
             cout << "\nPress Enter to continue...";
-            
+
             cin.ignore(1000, '\n');
             cin.get();
         }
 
-        else if (choice == 5) {
+        else if (choice == 4) {
             
             system("clear");
 
@@ -504,6 +679,16 @@ int main(){
             }
         }
 
+        else if (choice == 6) {
+            Help *help = new HelpBanner();
+
+            help->ApplicationHelp();
+
+            help->DevelopmentTeam();
+
+            delete help;
+        }
+
         else if (choice == 99){
 
             cout << "\nThanks for Using Netprobe as your Network Agent\n";
@@ -512,7 +697,8 @@ int main(){
         }
 
         else {
-            cout << "Invalid option!\n";
+            cout << BOLD << RED << "Invalid option!\n" << RESET;
+            break;
         }
     }
 

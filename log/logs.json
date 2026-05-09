@@ -51,4 +51,27 @@ OS: Linux Ubuntu
 
 "
   }
+,
+  {
+    "timestamp": "09/05/2026 13:32",
+    "type": "Service Detection",
+    "target": "github.com [20.207.73.82]",
+    "duration_sec": "210.94",
+    "result": "--- Port 22 ---
+Service: SSH
+Protocol: SSH
+Version: OpenSSH
+
+--- Port 80 ---
+Service: HTTP
+Protocol: HTTP
+Version: HTTP Service
+
+--- Port 443 ---
+Service: HTTPS
+Protocol: HTTPS
+Version: HTTPS Service
+
+"
+  }
 ]

@@ -37,22 +37,7 @@ class HelpBanner : public Help {
         const string BOLD    = "\033[1m";
         const string RESET   = "\033[0m";
 
-        // PRIVATE BANNER METHOD
-
         void displayBanner(){
-
-            cout << CYAN;
-
-            cout << R"(
-
-███╗   ██╗███████╗████████╗██████╗ ██████╗  ██████╗ ██████╗ ███████╗
-████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔════╝
-██╔██╗ ██║█████╗     ██║   ██████╔╝██████╔╝██║   ██║██████╔╝█████╗
-██║╚██╗██║██╔══╝     ██║   ██╔═══╝ ██╔══██╗██║   ██║██╔══██╗██╔══╝
-██║ ╚████║███████╗   ██║   ██║     ██║  ██║╚██████╔╝██████╔╝███████╗
-╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
-
-)";
 
             cout << RESET;
 
@@ -146,16 +131,18 @@ class HelpBanner : public Help {
                  << "[+] DEVELOPMENT TEAM"
                  << RESET << "\n\n";
 
-            cout << "Project Name : NetProbe\n";
+                        cout << "Project Name : NetProbe\n";
             cout << "Language     : C++\n";
             cout << "Architecture : Modular Object Oriented Security Framework\n";
-            cout << "Networking   : POSIX Socket Programming\n\n";
+            cout << "Networking   : POSIX Socket Programming\n";
+            cout << "Github Repo  :" << BOLD << CYAN << " https://github.com/MuhammadTalha15/NetProbe.git\n\n" << RESET;
             cout<<endl;
 
             cout<<"[+] Muhammad Talha (Port Scanning Engine, Host Resolving and Interface Designing)"<<endl;
             cout<<"[+] Muhammad Awais Habib (Traget Service Detection)"<<endl;
             cout<<"[+] Muhammad Saif Ali (Banner Grabbing and OS Detection)"<<endl;
             cout<<"[+] Hassan Murtaza (Report Generation and Log Generation)"<<endl;
+            cout<<endl;
 
             cout << BOLD << CYAN
                  << "[+] CORE MODULES"
@@ -167,16 +154,6 @@ class HelpBanner : public Help {
             cout << "    • Host Resolver\n";
             cout << "    • JSON Logging Manager\n";
             cout << "    • Analytics Dashboard\n\n";
-
-            cout << BOLD << YELLOW
-                 << "[+] SPECIAL FEATURES"
-                 << RESET << "\n\n";
-
-            cout << "    • CTRL+C Interrupt Persistence\n";
-            cout << "    • Real-Time Logging\n";
-            cout << "    • Domain Resolution\n";
-            cout << "    • Professional Terminal UI\n";
-            cout << "    • Multi-Module Architecture\n\n";
 
             cout << BOLD << MAGENTA
                  << "\"Reconnaissance Begins With Visibility\""
