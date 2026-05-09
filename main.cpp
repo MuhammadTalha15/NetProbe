@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <chrono>
+#include <csignal> // FOR CTRL+C INTERRUPT PERSISTENCE // <- HASSAN INCLUDED THIS
 
 // THREADNG LIBRARIES
 
@@ -22,14 +23,28 @@
 #include "./headers/portScanner.h"
 #include "./headers/hostresolver.h"
 #include "./headers/banner.h"
+#include "./headers/log_manager.h"
 
 using namespace std;
+
+// GLOBAL SIGNAL FLAG FOR CTRL+C PERSISTENCE // <- INCLUDED BY HASSAN
+volatile sig_atomic_t stopFlag = 0;
+
+void handleInterrupt(int sig) { 
+
+    stopFlag = 1; 
+
+    // Notifying the user immediately
+    write(STDOUT_FILENO, "\n[!] Interrupt Received! Finalizing log storage...\n", 51);
+
+}
 
 const string YELLOW = "\033[33m";
 const string GREEN = "\033[32m";
 const string CYAN = "\033[36m";
 const string MAGENTA = "\033[35m";
 const string BOLD = "\033[1m";
+const string RED = "\033[31m";
 const string RESET = "\033[0m";
 
 // Function to display the futuristic splash screen
@@ -92,155 +107,401 @@ void displayLogo(){
 }
 
 int main(){
+    
+    // Register the Ctrl+C signal handler
+    signal(SIGINT, handleInterrupt);
 
     int choice;
     string targetIP;
 
+    // ======================================================
+    // LOG GENERATION: Initialize LogManager Object
+    // ======================================================
+    LogManager logger;
+
     while (true){
+        
+        stopFlag = 0; // Reset signal flag for new operation
 
         system("clear");
         displayLogo();
 
         cout << CYAN << "probe" << RESET << ">";
+
         cin >> choice;
 
-        if (choice == 1){
+        // if (!(cin >> choice)) {
+        //     if (cin.eof()) break;
+        //     cin.clear();
+        //     cin.ignore(1000, '\n');
+        //     continue;
+        // }
 
+        if (choice == 1){
             cout << "Enter Target IP / Domain: ";
             cin >> targetIP;
 
             HostResolver resolver;
 
-            string host = resolver.extractHostname(targetIP);
+            string hostInput = resolver.extractHostname(targetIP);
 
-            bool isDomain = false;
-            for (char c : host){
-                if (isalpha(c)){
-                    isDomain = true;
-                    break;
-                }
+            string finalTarget = resolver.resolveToIP(hostInput);
+
+            if (finalTarget.empty()) {
+            
+                cout << RED << "Could not resolve host" << RESET << endl;
+            
+                sleep(1);
+            
+                continue;
             }
 
-            string finalTarget = host;
-
-            if (isDomain){
-                string ipAddress = resolver.resolveToIP(host);
-
-                if (ipAddress.empty()){
-                    cout << "Could not resolve host\n";
-                    continue; // go back to menu
-                }
-
-                cout << "Resolved: " << host << " -> " << ipAddress << endl;
-                finalTarget = ipAddress;
+            // Show resolved result only if domain was entered
+            if(hostInput != finalTarget) {
+            
+                cout << "Resolved: "
+                     << hostInput
+                     << " -> "
+                     << finalTarget
+                     << endl;
             }
 
-            cout << YELLOW << "Starting NetProbe Scanning ..." << RESET << endl;
+            cout << YELLOW
+                 << "Starting NetProbe Scanning ..."
+                 << RESET << endl;
+
+            // ======================================================
+            // Timing Start
+            // ======================================================
+
+            auto start = chrono::high_resolution_clock::now();
 
             PortScanner scanner(finalTarget, 20, 500, 250);
-            vector<PortResult> results = scanner.scanAllPorts();
 
-            cout << "\nNetProbe Scan Results for (" << targetIP
-                 << ") Resolved to -> " << finalTarget << "\n\n";
+            vector<PortResult> results;
 
             bool found = false;
-            for (const auto &r : results){
-                if (r.open){
-                    cout << "Port " << r.port << " is OPEN ["
-                         << GREEN << "OK" << RESET << "]\n";
+
+            // ======================================================
+            // Manual Scan Loop (Old Style Preserved)
+            // ======================================================
+
+            for(int p = 20; p <= 500; p++) {
+            
+                if(stopFlag) {
+                    break;
+                }
+            
+                bool isOpen = scanner.startSinglePortScan(p);
+            
+                if(isOpen) {
+                
+                    cout << "Port "
+                         << p
+                         << " is OPEN ["
+                         << GREEN
+                         << "OK"
+                         << RESET
+                         << "]\n";
+                
+                    results.push_back({p, true});
+                
                     found = true;
                 }
             }
 
-            if (!found)
-                cout << "No open ports found.\n";
+            // ======================================================
+            // Timing End
+            // ======================================================
 
-            // ⏸ Pause before returning to menu
+            auto end = chrono::high_resolution_clock::now();
+
+            chrono::duration<double> duration = end - start;
+
+            // ======================================================
+            // Final Result Header
+            // ======================================================
+
+            cout << "\nNetProbe Scan Results for ("
+                 << targetIP
+                 << ") Resolved to -> "
+                 << finalTarget
+                 << "\n\n";
+
+            if(!found) {
+            
+                cout << "No open ports found.\n";
+            }
+
+            // ======================================================
+            // Interrupted Scan Message
+            // ======================================================
+
+            if(stopFlag) {
+            
+                cout << RED
+                     << "\n[!] User Interrupted. Partial data saved."
+                     << RESET
+                     << endl;
+            }
+
+            // ======================================================
+            // Save Logs
+            // ======================================================
+
+            logger.logPortScan(
+                hostInput,
+                finalTarget,
+                results,
+                duration.count()
+            );
+
+            cout << CYAN
+                 << "\n[!] Results exported to log/logs.json"
+                 << RESET
+                 << endl;
+
+            // ======================================================
+            // Pause
+            // ======================================================
+
             cout << "\nPress Enter to return to menu...";
-            cin.ignore();
-            cin.get();
+
+            cin.ignore(1000, '\n');
+            cin.get();        
         }
 
         else if (choice == 3){
-            
             cout << "Enter Target IP / Domain: ";
 
             cin >> targetIP;
-
-        HostResolver resolver;
-
-        string host = resolver.extractHostname(targetIP);
-
-        bool isDomain = false;
-
-        for (char c : host){
-
-            if (isalpha(c)){
-
-                isDomain = true;
-
-                break;
-            }
-        }
-
-        string finalTarget = host;
-
-        if (isDomain){
-
-            string ipAddress =
-                resolver.resolveToIP(host);
-
-            if (ipAddress.empty()){
-
-                cout << "Could not resolve host\n";
-
+                    
+            HostResolver resolver;
+                    
+            string hostInput = resolver.extractHostname(targetIP);
+                    
+            string finalTarget = resolver.resolveToIP(hostInput);
+                    
+            if(finalTarget.empty()) {
+            
+                cout << RED
+                     << "Could not resolve host"
+                     << RESET
+                     << endl;
+            
+                sleep(1);
+            
                 continue;
             }
-
-        cout << "Resolved: "
-             << host
-             << " -> "
-             << ipAddress
-             << endl;
-
-        finalTarget = ipAddress;
-    }
-
-        BannerGrabber bg;
-
-        vector<int> commonPorts = { 21,22,25,80,110,143,443,8080 };
-
-        bool found = false;
-
-        for(int port : commonPorts){
-
-        if(bg.isPortOpen(finalTarget, port)){
-
-            found = true;
-
-            cout << "\n[+] Port "
-                 << port
-                 << " OPEN\n";
-
-            string banner = bg.grabBanner(finalTarget, port);
-
-            cout << "\nBanner:\n";
-            cout << banner << endl;
-
-            cout << "\nDetected OS: ";
-
-            cout << bg.detectOS(banner) << endl;
-        }
-    }
-
-        if(!found){
-
-            cout << "\nNo responsive services found\n";
-        }
-
+            
+            // Show resolution only if domain was entered
+            if(hostInput != finalTarget) {
+            
+                cout << "Resolved: "
+                     << hostInput
+                     << " -> "
+                     << finalTarget
+                     << endl;
+            }
+            
+            // ======================================================
+            // Timing Start
+            // ======================================================
+            
+            auto start = chrono::high_resolution_clock::now();
+            
+            // ======================================================
+            // Log Data Collector
+            // ======================================================
+            
+            stringstream realLogData;
+            
+            BannerGrabber bg;
+            
+            vector<int> commonPorts = {
+                21,22,25,80,110,143,443,8080
+            };
+            
+            bool found = false;
+            
+            cout << YELLOW
+                 << "Initiating Banner/OS Detection..."
+                 << RESET
+                 << endl;
+            
+            for(int port : commonPorts) {
+            
+                if(stopFlag) {
+                    break;
+                }
+            
+                if(bg.isPortOpen(finalTarget, port)) {
+                
+                    found = true;
+                
+                    cout << "\n[+] Port "
+                         << port
+                         << " OPEN\n";
+                
+                    string banner =
+                        bg.grabBanner(finalTarget, port);
+                
+                    cout << "\nBanner:\n";
+                
+                    cout << banner << endl;
+                
+                    string os =
+                        bg.detectOS(banner);
+                
+                    cout << "\nDetected OS: ";
+                
+                    cout << os << endl;
+                
+                    // ======================================================
+                    // Capture Data For Logs
+                    // ======================================================
+                
+                    realLogData
+                        << "--- Port "
+                        << port
+                        << " ---\n";
+                
+                    realLogData
+                        << "Banner: "
+                        << (banner.empty() ? "None" : banner)
+                        << "\n";
+                
+                    realLogData
+                        << "OS: "
+                        << os
+                        << "\n\n";
+                }
+            }
+            
+            // ======================================================
+            // Timing End
+            // ======================================================
+            
+            auto end = chrono::high_resolution_clock::now();
+            
+            chrono::duration<double> duration =
+                end - start;
+            
+            // ======================================================
+            // Interrupted Scan
+            // ======================================================
+            
+            if(stopFlag) {
+            
+                cout << RED
+                     << "\n[!] Interrupted. Saving banners collected so far..."
+                     << RESET
+                     << endl;
+            
+                realLogData << "[SCAN INTERRUPTED]";
+            }
+            
+            // ======================================================
+            // Final Output
+            // ======================================================
+            
+            if(!found && !stopFlag) {
+            
+                cout << "\nNo responsive services found\n";
+            }
+            
+            // ======================================================
+            // Save Logs
+            // ======================================================
+            
+            if(found || stopFlag) {
+            
+                logger.logGeneralScan(
+                    "Banner/OS Scan",
+                    hostInput,
+                    finalTarget,
+                    realLogData.str(),
+                    duration.count()
+                );
+            
+                cout << CYAN
+                     << "\n[!] Full banner data logged to log/logs.json"
+                     << RESET
+                     << endl;
+            }
+            
+            // ======================================================
+            // Pause
+            // ======================================================
+            
             cout << "\nPress Enter to continue...";
-            cin.ignore();
+            
+            cin.ignore(1000, '\n');
             cin.get();
+        }
+
+        else if (choice == 5) {
+            
+            system("clear");
+
+            int logChoice;
+
+            cout << MAGENTA << BOLD << "--- NETPROBE REPORT & ANALYTICS ---" << RESET << "\n\n";
+
+            cout << "[1] View All Logs (Pretty Table View)\n";
+
+            cout << "[2] Search Logs by Target Name/IP\n";
+
+            cout << "[3] Filter Logs by Scan Type\n";
+
+            cout << "[4] View Analytics Dashboard\n";
+
+            cout << "[0] Back to Main Menu\n\n";
+
+            cout << CYAN << "log-manager" << RESET << ">";
+
+            cin >> logChoice;
+
+            if (logChoice == 1) {
+
+                logger.displayPrettyLogs();
+
+            } else if (logChoice == 2) {
+
+                string searchKey; 
+
+                cout << "Enter Target Name or IP to Search: "; 
+
+                cin >> searchKey;
+
+                logger.displayPrettyLogs(searchKey); 
+
+            } else if (logChoice == 3) {
+
+                string sType; 
+
+                // UPDATED: CLEARER INPUT OPTIONS
+                cout << "Enter Scan Type (Port Scan / Banner/OS Scan): "; 
+
+                cin.ignore(1000, '\n'); 
+                
+                getline(cin, sType);
+
+                logger.displayPrettyLogs("", sType);
+
+            } else if (logChoice == 4) {
+
+                logger.displayDashboard();
+
+            }
+            
+            if (logChoice != 0) { 
+
+                cout << "\nPress Enter to continue..."; 
+
+                cin.ignore(1000, '\n'); cin.get(); 
+
+            }
         }
 
         else if (choice == 99){

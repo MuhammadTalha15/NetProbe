@@ -1,0 +1,54 @@
+[
+  {
+    "timestamp": "09/05/2026 10:38",
+    "type": "Port Scan",
+    "target": "127.0.0.1",
+    "duration_sec": "0.02",
+    "result": "Open: 80 "
+  }
+,
+  {
+    "timestamp": "09/05/2026 10:45",
+    "type": "Port Scan",
+    "target": "google.com [142.250.202.46]",
+    "duration_sec": "120.33",
+    "result": "Open: 80 443 "
+  }
+,
+  {
+    "timestamp": "09/05/2026 10:48",
+    "type": "Port Scan",
+    "target": "github.com [20.207.73.82]",
+    "duration_sec": "120.62",
+    "result": "Open: 22 80 443 "
+  }
+,
+  {
+    "timestamp": "09/05/2026 11:03",
+    "type": "Banner/OS Scan",
+    "target": "Scanme.nmap.org [45.33.32.156]",
+    "duration_sec": "49.02",
+    "result": "--- Port 22 ---
+Banner: SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13
+
+OS: Linux Ubuntu
+
+--- Port 80 ---
+Banner: HTTP/1.1 200 OK
+Date: Sat, 09 May 2026 15:03:36 GMT
+Server: Apache/2.4.7 (Ubuntu)
+Accept-Ranges: bytes
+Vary: Accept-Encoding
+Transfer-Encoding: chunked
+Content-Type: text/html
+
+4c
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+<title>Go ahead and ScanM
+OS: Linux Ubuntu
+
+"
+  }
+]
